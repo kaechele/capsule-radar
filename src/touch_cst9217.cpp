@@ -1,7 +1,7 @@
 // CST9217 capacitive touch over I2C (Arduino). Ported from Waveshare's
 // esp_lcd_touch_cst9217: read 10 bytes from reg 0xD000, validate ACK 0xAB,
 // unpack the 12-bit X/Y of the first touch point. Single-touch is enough here.
-#include "touch_cst9217.h"
+#include "touch.h"
 #include "config.h"
 #include <Arduino.h>
 #include <Wire.h>

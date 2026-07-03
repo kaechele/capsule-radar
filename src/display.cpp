@@ -7,7 +7,7 @@
 #include "config.h"
 #include "radar_view.h"
 #include "ui.h"
-#include "touch_cst9217.h"
+#include "touch.h"
 
 #include <Arduino.h>
 #include <Arduino_GFX_Library.h>
