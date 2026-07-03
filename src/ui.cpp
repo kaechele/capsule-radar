@@ -5,6 +5,7 @@
 #include "route.h"
 #include "photo.h"
 #include "config.h"
+#include "ui_scale.h"
 #include <lvgl.h>
 #include <stdio.h>
 #include <stdint.h>
@@ -150,14 +151,14 @@ static void refresh_card(void) {
         lv_color_t *pbuf = photo_buffer(&mw, &mh);
         lv_canvas_set_buffer(s_photo, pbuf, pw, ph, LV_IMG_CF_TRUE_COLOR);
         lv_obj_set_size(s_photo, pw, ph);
-        lv_obj_align(s_photo, LV_ALIGN_CENTER, 0, -28 - ph / 2);   // sit lower: fill the band down to the card
+        lv_obj_align(s_photo, LV_ALIGN_CENTER, 0, -(UI_SCALE(28) + ph / 2));   // sit lower: fill the band down to the card
         lv_obj_clear_flag(s_photo, LV_OBJ_FLAG_HIDDEN);
         lv_obj_invalidate(s_photo);
         if (s_photoCredit) {
             char c[52];
             snprintf(c, sizeof(c), "Photo: %s", pcred[0] ? pcred : "planespotters.net");
             lv_label_set_text(s_photoCredit, c);
-            lv_obj_align_to(s_photoCredit, s_photo, LV_ALIGN_OUT_BOTTOM_MID, 0, 1);
+            lv_obj_align_to(s_photoCredit, s_photo, LV_ALIGN_OUT_BOTTOM_MID, 0, UI_SCALE(1));
             lv_obj_clear_flag(s_photoCredit, LV_OBJ_FLAG_HIDDEN);
         }
     } else if (s_photo) {
@@ -168,7 +169,7 @@ static void refresh_card(void) {
         if (s_photoCredit) {
             const bool done = in.hex[0] && photo_done(in.hex);
             lv_label_set_text(s_photoCredit, done ? "No photo available" : "Loading photo...");
-            lv_obj_align(s_photoCredit, LV_ALIGN_CENTER, 0, -104);   // where the photo would sit
+            lv_obj_align(s_photoCredit, LV_ALIGN_CENTER, 0, -UI_SCALE(104));   // where the photo would sit
             lv_obj_clear_flag(s_photoCredit, LV_OBJ_FLAG_HIDDEN);
         }
     }
@@ -373,7 +374,7 @@ static lv_obj_t *make_tile_title(lv_obj_t *tile, const char *txt) {
     lv_label_set_text(l, txt);
     lv_obj_set_style_text_font(l, &lv_font_montserrat_16, 0);
     lv_obj_set_style_text_color(l, UI_GREEN, 0);
-    lv_obj_align(l, LV_ALIGN_TOP_MID, 0, 22);
+    lv_obj_align(l, LV_ALIGN_TOP_MID, 0, UI_SCALE(22));
     return l;
 }
 
@@ -381,7 +382,7 @@ static lv_obj_t *make_tile_title(lv_obj_t *tile, const char *txt) {
 static lv_obj_t *make_round_panel(lv_obj_t *parent) {
     lv_obj_t *p = lv_obj_create(parent);
     lv_obj_remove_style_all(p);
-    lv_obj_set_size(p, 462, 462);
+    lv_obj_set_size(p, UI_SCALE(462), UI_SCALE(462));
     lv_obj_center(p);
     lv_obj_set_style_radius(p, LV_RADIUS_CIRCLE, 0);
     lv_obj_set_style_bg_color(p, lv_color_hex(0x05100A), 0);
@@ -397,8 +398,8 @@ static lv_obj_t *make_round_panel(lv_obj_t *parent) {
 static void build_card(void) {
     s_card = lv_obj_create(s_tileRadar);
     lv_obj_remove_style_all(s_card);
-    lv_obj_set_size(s_card, 300, 118);
-    lv_obj_align(s_card, LV_ALIGN_CENTER, 0, 66);
+    lv_obj_set_size(s_card, UI_SCALE(300), UI_SCALE(118));
+    lv_obj_align(s_card, LV_ALIGN_CENTER, 0, UI_SCALE(66));
     lv_obj_set_style_bg_color(s_card, UI_PANEL, 0);
     lv_obj_set_style_bg_opa(s_card, 235, 0);
     lv_obj_set_style_radius(s_card, 14, 0);
@@ -418,17 +419,17 @@ static void build_card(void) {
     s_cardL = lv_label_create(s_card);
     lv_obj_set_style_text_font(s_cardL, &lv_font_montserrat_14, 0);
     lv_obj_set_style_text_color(s_cardL, UI_SOFT, 0);
-    lv_obj_align(s_cardL, LV_ALIGN_TOP_LEFT, 0, 26);
+    lv_obj_align(s_cardL, LV_ALIGN_TOP_LEFT, 0, UI_SCALE(26));
 
     s_cardR = lv_label_create(s_card);
     lv_obj_set_style_text_font(s_cardR, &lv_font_montserrat_14, 0);
     lv_obj_set_style_text_color(s_cardR, UI_SOFT, 0);
-    lv_obj_align(s_cardR, LV_ALIGN_TOP_LEFT, 150, 26);
+    lv_obj_align(s_cardR, LV_ALIGN_TOP_LEFT, UI_SCALE(150), UI_SCALE(26));
 
     s_cardRoute = lv_label_create(s_card);
     lv_obj_set_style_text_font(s_cardRoute, &lv_font_montserrat_14, 0);
     lv_obj_set_style_text_color(s_cardRoute, UI_GREEN, 0);
-    lv_obj_align(s_cardRoute, LV_ALIGN_TOP_LEFT, 0, 76);
+    lv_obj_align(s_cardRoute, LV_ALIGN_TOP_LEFT, 0, UI_SCALE(76));
 
     // aircraft photo + credit, floating above the card (hidden until one loads)
     s_photo = lv_canvas_create(s_tileRadar);
@@ -477,13 +478,13 @@ void ui_splash_show(void) {
     lv_obj_clear_flag(cont, LV_OBJ_FLAG_SCROLLABLE);
 
     // concentric rings
-    const lv_coord_t dia[3] = { 210, 142, 78 };
+    const lv_coord_t dia[3] = { UI_SCALE(210), UI_SCALE(142), UI_SCALE(78) };
     const lv_opa_t   op[3]  = { 90, 120, 160 };
     for (int i = 0; i < 3; ++i) {
         lv_obj_t *r = lv_obj_create(cont);
         lv_obj_remove_style_all(r);
         lv_obj_set_size(r, dia[i], dia[i]);
-        lv_obj_align(r, LV_ALIGN_CENTER, 0, -8);
+        lv_obj_align(r, LV_ALIGN_CENTER, 0, -UI_SCALE(8));
         lv_obj_set_style_radius(r, LV_RADIUS_CIRCLE, 0);
         lv_obj_set_style_border_color(r, UI_GREEN, 0);
         lv_obj_set_style_border_opa(r, op[i], 0);
@@ -492,8 +493,8 @@ void ui_splash_show(void) {
     }
     // rotating sweep
     lv_obj_t *sweep = lv_spinner_create(cont, 1400, 55);
-    lv_obj_set_size(sweep, 210, 210);
-    lv_obj_align(sweep, LV_ALIGN_CENTER, 0, -8);
+    lv_obj_set_size(sweep, UI_SCALE(210), UI_SCALE(210));
+    lv_obj_align(sweep, LV_ALIGN_CENTER, 0, -UI_SCALE(8));
     lv_obj_set_style_arc_opa(sweep, 0, LV_PART_MAIN);
     lv_obj_set_style_arc_color(sweep, UI_GREEN, LV_PART_INDICATOR);
     lv_obj_set_style_arc_width(sweep, 4, LV_PART_INDICATOR);
@@ -502,13 +503,13 @@ void ui_splash_show(void) {
     lv_label_set_text(title, "CAPSULE RADAR");
     lv_obj_set_style_text_font(title, &lv_font_montserrat_28, 0);
     lv_obj_set_style_text_color(title, UI_GREEN, 0);
-    lv_obj_align(title, LV_ALIGN_CENTER, 0, 118);
+    lv_obj_align(title, LV_ALIGN_CENTER, 0, UI_SCALE(118));
 
     lv_obj_t *sub = lv_label_create(cont);
     lv_label_set_text(sub, "Live ADS-B radar");
     lv_obj_set_style_text_font(sub, &lv_font_montserrat_14, 0);
     lv_obj_set_style_text_color(sub, UI_SOFT, 0);
-    lv_obj_align(sub, LV_ALIGN_CENTER, 0, 150);
+    lv_obj_align(sub, LV_ALIGN_CENTER, 0, UI_SCALE(150));
 
     lv_timer_t *t = lv_timer_create(splash_dismiss_cb, 2200, cont);   // hold, then fade out
     lv_timer_set_repeat_count(t, 1);
@@ -544,9 +545,9 @@ void ui_create(void) {
 
     // on-screen range/zoom button (reliable single tap; bottom, above the 'S' marker)
     s_zoomBtn = lv_btn_create(s_tileRadar);
-    lv_obj_set_size(s_zoomBtn, 120, 44);
-    lv_obj_set_ext_click_area(s_zoomBtn, 18);   // invisibly enlarge the tap target (easier to hit)
-    lv_obj_align(s_zoomBtn, LV_ALIGN_BOTTOM_MID, 0, -32);
+    lv_obj_set_size(s_zoomBtn, UI_SCALE(120), UI_SCALE(44));
+    lv_obj_set_ext_click_area(s_zoomBtn, UI_SCALE(18));   // invisibly enlarge the tap target (easier to hit)
+    lv_obj_align(s_zoomBtn, LV_ALIGN_BOTTOM_MID, 0, -UI_SCALE(32));
     lv_obj_set_style_radius(s_zoomBtn, 18, 0);
     lv_obj_set_style_bg_color(s_zoomBtn, UI_PANEL, 0);
     lv_obj_set_style_bg_opa(s_zoomBtn, 225, 0);
@@ -565,14 +566,14 @@ void ui_create(void) {
     // WiFi is a 4-bar signal meter: bar count = RSSI strength, colour = feed health.
     s_hudWifi = lv_obj_create(s_tileRadar);
     lv_obj_remove_style_all(s_hudWifi);
-    lv_obj_set_size(s_hudWifi, 21, 14);
-    lv_obj_align(s_hudWifi, LV_ALIGN_TOP_MID, -94, 50);
+    lv_obj_set_size(s_hudWifi, UI_SCALE(21), UI_SCALE(14));
+    lv_obj_align(s_hudWifi, LV_ALIGN_TOP_MID, -UI_SCALE(94), UI_SCALE(50));
     lv_obj_clear_flag(s_hudWifi, LV_OBJ_FLAG_SCROLLABLE | LV_OBJ_FLAG_CLICKABLE);
     for (int i = 0; i < 4; ++i) {
         s_hudBars[i] = lv_obj_create(s_hudWifi);
         lv_obj_remove_style_all(s_hudBars[i]);
-        lv_obj_set_size(s_hudBars[i], 3, (lv_coord_t)(4 + i * 3));   // 4, 7, 10, 13 px tall
-        lv_obj_align(s_hudBars[i], LV_ALIGN_BOTTOM_LEFT, (lv_coord_t)(i * 5), 0);
+        lv_obj_set_size(s_hudBars[i], UI_SCALE(3), UI_SCALE(4 + i * 3));   // 4, 7, 10, 13 px tall (scaled)
+        lv_obj_align(s_hudBars[i], LV_ALIGN_BOTTOM_LEFT, UI_SCALE(i * 5), 0);
         lv_obj_set_style_radius(s_hudBars[i], 1, 0);
         lv_obj_set_style_bg_color(s_hudBars[i], UI_INK, 0);
         lv_obj_set_style_bg_opa(s_hudBars[i], LV_OPA_COVER, 0);
@@ -583,39 +584,39 @@ void ui_create(void) {
     lv_obj_set_style_text_font(s_hudGps, &lv_font_montserrat_14, 0);
     lv_obj_set_style_text_color(s_hudGps, UI_GREEN, 0);
     lv_label_set_text(s_hudGps, "");             // hidden until ui_set_gps() says GPS is on
-    lv_obj_align(s_hudGps, LV_ALIGN_TOP_MID, -62, 50);
+    lv_obj_align(s_hudGps, LV_ALIGN_TOP_MID, -UI_SCALE(62), UI_SCALE(50));
 
     s_hudCount = lv_label_create(s_tileRadar);
     lv_obj_set_style_text_font(s_hudCount, &lv_font_montserrat_14, 0);
     lv_obj_set_style_text_color(s_hudCount, UI_INK, 0);
     lv_label_set_text(s_hudCount, "0");
-    lv_obj_align(s_hudCount, LV_ALIGN_TOP_MID, -34, 50);
+    lv_obj_align(s_hudCount, LV_ALIGN_TOP_MID, -UI_SCALE(34), UI_SCALE(50));
 
     s_hudClock = lv_label_create(s_tileRadar);
     lv_obj_set_style_text_font(s_hudClock, &lv_font_montserrat_14, 0);
     lv_obj_set_style_text_color(s_hudClock, UI_INK, 0);
     lv_label_set_text(s_hudClock, "--:--");
-    lv_obj_align(s_hudClock, LV_ALIGN_TOP_MID, 30, 50);
+    lv_obj_align(s_hudClock, LV_ALIGN_TOP_MID, UI_SCALE(30), UI_SCALE(50));
 
     s_hudBatt = lv_label_create(s_tileRadar);
     lv_obj_set_style_text_font(s_hudBatt, &lv_font_montserrat_14, 0);
     lv_obj_set_style_text_color(s_hudBatt, UI_INK, 0);
     lv_label_set_text(s_hudBatt, "");
-    lv_obj_align(s_hudBatt, LV_ALIGN_TOP_MID, 92, 50);
+    lv_obj_align(s_hudBatt, LV_ALIGN_TOP_MID, UI_SCALE(92), UI_SCALE(50));
 
     s_hudDate = lv_label_create(s_tileRadar);
     lv_obj_set_style_text_font(s_hudDate, &lv_font_montserrat_12, 0);
     lv_obj_set_style_text_color(s_hudDate, UI_INK, 0);
     lv_obj_set_style_text_opa(s_hudDate, 140, 0);
     lv_label_set_text(s_hudDate, "");
-    lv_obj_align(s_hudDate, LV_ALIGN_TOP_MID, 0, 70);
+    lv_obj_align(s_hudDate, LV_ALIGN_TOP_MID, 0, UI_SCALE(70));
 
     // --- list tile (circular panel, clipped to the round screen) ---
     lv_obj_t *lp = make_round_panel(s_tileList);
     make_tile_title(lp, "AIRCRAFT");
     s_list = lv_list_create(lp);
-    lv_obj_set_size(s_list, 300, 372);
-    lv_obj_align(s_list, LV_ALIGN_CENTER, 0, 22);
+    lv_obj_set_size(s_list, UI_SCALE(300), UI_SCALE(372));
+    lv_obj_align(s_list, LV_ALIGN_CENTER, 0, UI_SCALE(22));
     lv_obj_set_style_bg_opa(s_list, LV_OPA_TRANSP, 0);
     lv_obj_set_style_border_width(s_list, 0, 0);
     lv_obj_set_style_pad_row(s_list, 2, 0);
@@ -627,29 +628,29 @@ void ui_create(void) {
     lv_obj_set_style_text_font(s_statsLbl, &lv_font_montserrat_16, 0);
     lv_obj_set_style_text_color(s_statsLbl, UI_SOFT, 0);
     lv_label_set_text(s_statsLbl, "Aircraft   0");
-    lv_obj_align(s_statsLbl, LV_ALIGN_CENTER, 0, -16);
+    lv_obj_align(s_statsLbl, LV_ALIGN_CENTER, 0, -UI_SCALE(16));
 
     s_statsGps = lv_label_create(sp);               // GPS status line (hidden unless GPS is on)
     lv_obj_set_style_text_font(s_statsGps, &lv_font_montserrat_14, 0);
     lv_obj_set_style_text_color(s_statsGps, UI_SOFT, 0);
     lv_obj_set_style_text_align(s_statsGps, LV_TEXT_ALIGN_CENTER, 0);
     lv_label_set_text(s_statsGps, "");
-    lv_obj_align(s_statsGps, LV_ALIGN_CENTER, 0, 90);
+    lv_obj_align(s_statsGps, LV_ALIGN_CENTER, 0, UI_SCALE(90));
 
     // footer: where to reach the configuration page (IP / hostname / setup AP)
     s_statsNet = lv_label_create(sp);
-    lv_obj_set_width(s_statsNet, 320);
+    lv_obj_set_width(s_statsNet, UI_SCALE(320));
     lv_obj_set_style_text_font(s_statsNet, &lv_font_montserrat_14, 0);
     lv_obj_set_style_text_color(s_statsNet, UI_GREEN, 0);
     lv_obj_set_style_text_align(s_statsNet, LV_TEXT_ALIGN_CENTER, 0);
     lv_label_set_text(s_statsNet, "");
-    lv_obj_align(s_statsNet, LV_ALIGN_CENTER, 0, 132);
+    lv_obj_align(s_statsNet, LV_ALIGN_CENTER, 0, UI_SCALE(132));
 
     lv_obj_t *ver = lv_label_create(sp);            // firmware version (so users can tell what's flashed)
     lv_obj_set_style_text_font(ver, &lv_font_montserrat_12, 0);
     lv_obj_set_style_text_color(ver, UI_DIM, 0);
     lv_label_set_text(ver, "Capsule Radar v" FW_VERSION);
-    lv_obj_align(ver, LV_ALIGN_CENTER, 0, 170);
+    lv_obj_align(ver, LV_ALIGN_CENTER, 0, UI_SCALE(170));
 
     lv_obj_set_tile_id(s_tv, 0, 0, LV_ANIM_OFF);
 
