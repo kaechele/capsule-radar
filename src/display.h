@@ -1,7 +1,8 @@
 #pragma once
-// M0 bring-up: CO5300 AMOLED (Arduino_GFX over QSPI) + LVGL.
-// Owns the panel + LVGL display driver so main.cpp stays glue-only.
-// Touch (CST9217 indev) and the radar UI come in later milestones.
+// Display + LVGL glue API. Two implementations exist — display.cpp (Waveshare
+// AMOLED-1.75, CO5300 over QSPI) and display_jc3636w518.cpp (GUITION JC3636W518,
+// ST77916 over QSPI) — only one is compiled per board env (see platformio.ini's
+// build_src_filter). main.cpp/ui.cpp call this API without caring which is active.
 #include <stdint.h>
 
 namespace display {
@@ -13,7 +14,8 @@ bool begin();
 // Pump LVGL: render dirty areas + run LVGL timers. Call every loop() iteration.
 void loop();
 
-// 0..255 panel brightness (CO5300 command 0x51).
+// 0..255 panel brightness (CO5300 command 0x51 on the Waveshare board; PWM/LEDC duty
+// on the JC3636W518, which has no panel brightness command).
 void setBrightness(uint8_t v);
 
 // ms since the last touch (LVGL inactivity timer) — for idle auto-dim.
