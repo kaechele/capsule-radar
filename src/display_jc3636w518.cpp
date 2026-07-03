@@ -213,6 +213,12 @@ static const uint8_t st77916_jc3636w518_init_ops[] = {
     WRITE_C8_D8, 0xD9, 0xAA,
     WRITE_C8_D8, 0xF3, 0x01,
     WRITE_C8_D8, 0xF0, 0x00,
+    WRITE_C8_D8, 0x3A, 0x55,   // COLMOD: 16-bit/pixel (RGB565). Missing from the vendor's raw
+                               // dump but present in Arduino_ST77916's own built-in tables right
+                               // here — without it the panel stays in its default ~18-bit mode
+                               // ("RGB 262K color" per the datasheet) while we stream RGB565,
+                               // which desyncs the pixel byte-boundaries (sheared/duplicated
+                               // pixels, garbled colors).
     WRITE_COMMAND_8, 0x21,
     WRITE_COMMAND_8, 0x11,
     END_WRITE,
@@ -284,6 +290,17 @@ static void flush_cb(lv_disp_drv_t *drv, const lv_area_t *area, lv_color_t *px) 
     lv_disp_flush_ready(drv);
 }
 
+// QSPI panels commonly require 2-pixel-aligned flush windows (even start, odd end) — the
+// CO5300 (Waveshare board) needs this and ships without it produced sheared/duplicated
+// pixels on partial-area updates. Applying the same safeguard here defensively.
+static void rounder_cb(lv_disp_drv_t *drv, lv_area_t *area) {
+    (void)drv;
+    area->x1 &= ~1;
+    area->y1 &= ~1;
+    area->x2 |= 1;
+    area->y2 |= 1;
+}
+
 // CST816 touch -> LVGL pointer. LVGL keeps the last point on release.
 static void touch_read_cb(lv_indev_drv_t *drv, lv_indev_data_t *data) {
     (void)drv;
@@ -346,10 +363,8 @@ bool begin() {
     s_disp_drv.hor_res  = SCREEN_W;
     s_disp_drv.ver_res  = SCREEN_H;
     s_disp_drv.flush_cb = flush_cb;
+    s_disp_drv.rounder_cb = rounder_cb;     // 2px-aligned flush windows (see rounder_cb above)
     s_disp_drv.draw_buf = &s_draw_buf;
-    // No rounder_cb here: unlike the CO5300 (which needs 2px-aligned flush windows), the
-    // vendor demo for this panel has no such workaround documented. Add one if real-hardware
-    // testing shows tearing/ghosting on partial updates (e.g. the radar sweep).
     lv_disp_drv_register(&s_disp_drv);
 
     // Touch input (CST816) -> LVGL pointer indev (drives tap-to-inspect + swipe).
