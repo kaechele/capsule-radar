@@ -12,6 +12,7 @@
 #include "ui.h"
 #include "touch.h"
 #include "touch_queue.h"
+#include "ui_scale.h"
 
 #include <Arduino.h>
 #include <Arduino_GFX_Library.h>
@@ -410,7 +411,7 @@ static void compose_step() {
     if (pOn) {
         s_pulseMs = (s_pulseMs + dt) % PULSE_PERIOD_MS;
         const float f = (float)s_pulseMs / (float)PULSE_PERIOD_MS;
-        s_pulseR = (PULSE_D_MIN + f * (PULSE_D_MAX - PULSE_D_MIN)) * 0.5f;
+        s_pulseR = (UI_SCALE(PULSE_D_MIN) + f * (UI_SCALE(PULSE_D_MAX) - UI_SCALE(PULSE_D_MIN))) * 0.5f;
         s_pulseOpa = (uint32_t)((1.0f - f) * PULSE_OPA);
         s_pulseBox = pulse_box(s_pulseR);
         rect_grow(regP, s_pulseBox);

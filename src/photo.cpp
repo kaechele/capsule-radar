@@ -1,4 +1,5 @@
 #include "photo.h"
+#include "ui_scale.h"
 #include <mutex>
 #include <string.h>
 #include <stdio.h>
@@ -7,8 +8,8 @@
 #include <esp_heap_caps.h>
 #endif
 
-#define PH_MAXW 232
-#define PH_MAXH 156
+#define PH_MAXW UI_SCALE(232)     // the card band above the detail card (scaled per board)
+#define PH_MAXH UI_SCALE(156)
 
 static std::mutex  s_m;
 static lv_color_t *s_buf = nullptr;
