@@ -33,6 +33,15 @@ Arduino_GFX), CST820 touch, TCA9554 expander, no PMIC or audio. Pins in
 porting there. Build with `-e esp32-s3-lcd-21`: `custom_sdkconfig` rebuilds ESP-IDF, so the
 first build is slow. Known issue: the picture shifts sideways (#49).
 
+### GUITION JC3636W518
+Same SoC and memory, but a **360x360 ST77916** QSPI TFT with a PWM backlight (GPIO 15),
+**CST816** touch on its own I2C bus, a PCM5100 DAC without a driver, and no PMIC, RTC or IMU.
+Pins in `src/boards/board_jc3636w518.h`. The panel shares `display.cpp` with the AMOLEDs
+(`PANEL_ST77916` picks Arduino_ST77916 and `src/st77916_init.h`; COLMOD 0x55 is required).
+The UI is authored at 466 px: on this panel `UI_SCALE()` (`src/ui_scale.h`) scales layout
+geometry and `src/ui_font.h` picks smaller fonts, so new layout code should use both.
+Build with `-e esp32-s3-jc3636w518`; check layouts with `-e native-jc3636w518`.
+
 ## Stack decision
 **PlatformIO + Arduino framework.** Libraries:
 - `moononournation/GFX Library for Arduino` (Arduino_GFX) — CO5300 QSPI panel driver + framebuffer.
@@ -96,6 +105,7 @@ coastline data, and `sim_main.cpp` (the desktop SDL simulator).
 pio run -e esp32-s3-amoled-175              # build (reference board)
 pio run -e esp32-s3-amoled-143              # build (1.43)
 pio run -e esp32-s3-lcd-21                  # build (LCD 2.1, experimental)
+pio run -e esp32-s3-jc3636w518              # build (GUITION JC3636W518)
 pio run -e esp32-s3-amoled-175 -t upload    # flash over USB-C
 pio device monitor -b 115200                # serial
 ```

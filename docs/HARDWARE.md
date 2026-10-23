@@ -1,8 +1,10 @@
 # Hardware
 
-Capsule Radar supports two Waveshare round-AMOLED boards. Both use the same SoC and
-the same 466×466 CO5300 panel, but their **pin maps have nothing in common** — flashing
-one board's image onto the other gives a black screen and a silent I2C bus.
+Capsule Radar supports two Waveshare round-AMOLED boards, which share the SoC and the
+466×466 CO5300 panel, and the GUITION JC3636W518, the same SoC with a smaller 360×360
+ST77916 TFT. Their **pin maps have nothing in common** — flashing one board's image onto
+another gives a black screen and a silent I2C bus. (The experimental Waveshare LCD 2.1 is
+described in the README.)
 
 Pin maps live one-per-board in [`../src/boards/`](../src/boards/) and are selected by a
 build flag (see [`../src/config.h`](../src/config.h)):
@@ -11,6 +13,7 @@ build flag (see [`../src/config.h`](../src/config.h)):
 |---|---|---|---|
 | ESP32-S3-Touch-AMOLED-1.75 (reference) | `esp32-s3-amoled-175` | *(default)* | `board_amoled_175.h` |
 | ESP32-S3-Touch-AMOLED-1.43 | `esp32-s3-amoled-143` | `-DBOARD_AMOLED_143` | `board_amoled_143.h` |
+| GUITION JC3636W518 | `esp32-s3-jc3636w518` | `-DBOARD_JC3636W518` | `board_jc3636w518.h` |
 
 ---
 
@@ -84,13 +87,52 @@ full-panel rim-ring test card one pixel at a time until it centred.
 
 ---
 
+## GUITION JC3636W518
+
+Same ESP32-S3 with 8 MB PSRAM / 16 MB flash, but a different panel, touch controller and
+peripheral set:
+
+- **Display**: 1.8" round IPS TFT, **360×360**, driver **ST77916** over **QSPI** — the same
+  Arduino_GFX bus as the CO5300, so `display.cpp` drives it (`PANEL_ST77916`), with the
+  vendor's init sequence in `src/st77916_init.h`. That sequence needed one addition: COLMOD
+  `0x3A = 0x55` (RGB565). Without it the panel stays in its 18-bit default and the picture
+  shears. The ST77916 has **no brightness command**: the backlight is PWM on GPIO 15.
+- **Touch**: **CST816** capacitive at `0x15`, on its **own I2C bus** (nothing else on it).
+- **Audio**: TI **PCM5100** I2S DAC, no control bus. **No driver yet** (`BOARD_HAS_AUDIO` 0),
+  so no alert pings. Its XSMT mute line (GPIO 48) is **active low**, the opposite of the
+  Waveshare boards' amp enable, so `audio.cpp` cannot reuse its `PIN_AUDIO_PA` logic as is.
+- **No PMIC, RTC or IMU**: no battery readout, no face-down sleep; time comes from NTP.
+- **Storage**: microSD slot (not used by the firmware). **Buttons**: BOOT.
+
+| Signal | GPIO | | Signal | GPIO |
+|---|---|---|---|---|
+| LCD CS | 10 | | Touch I2C SDA / SCL | 7 / 8 |
+| LCD RST | 47 | | Touch INT / RST | 41 / 40 |
+| LCD QSPI SCLK | 9 | | I2S BCLK / LRCLK / DOUT | 18 / 16 / 17 |
+| LCD QSPI D0–D3 | 11, 12, 13, 14 | | PCM5100 XSMT (mute) | 48, active low |
+| LCD backlight (PWM) | 15 | | Touch transform | none |
+
+Panel gap 0 / 0, QSPI clock 80 MHz (the vendor demo runs 50 MHz).
+
+The UI was laid out for 466 px. On this panel `UI_SCALE()` (`src/ui_scale.h`) scales the
+layout geometry and `src/ui_font.h` picks smaller fonts; `pio run -e native-jc3636w518 -t exec`
+shows the result in the simulator.
+
+**Sources.** GUITION's LVGL demo for this board (`pincfg.h`, the ST77916 init dump and the
+CST816S driver) and its schematics; pins confirmed on hardware.
+
+---
+
 ## Adding another board
 
 1. Copy a header in `src/boards/`, fill in the pins **from the vendor demo or the Arduino
    core board variant** — never guess them.
 2. Add an `[env:…]` in `platformio.ini` that `extends = amoled_common` and sets `-DBOARD_…`.
 3. Set `BOARD_HAS_PMIC` / `BOARD_HAS_AUDIO` / `TOUCH_DRIVER_…` for what is actually fitted;
-   add a touch driver alongside `touch_cst9217.cpp` / `touch_ft3168.cpp` if needed.
+   add a touch driver alongside `touch_cst9217.cpp` / `touch_ft3168.cpp` /
+   `touch_cst816.cpp` if needed. Define the panel geometry (`SCREEN_W`/`SCREEN_H`/
+   `SCREEN_CX`/`SCREEN_CY`/`RADAR_R_OUTER_PX`) in the board header; a panel smaller than
+   466 px gets the UI scaled down automatically.
 4. Confirm on hardware before committing: I2C scan, a full-panel test pattern for the gap,
    and a touch dot that lands under your fingertip.
 5. Add the env to `.github/workflows/release.yml` so it ships with every release.

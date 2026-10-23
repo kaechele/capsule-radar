@@ -78,6 +78,17 @@ Release assets include `CapsuleRadar-esp32s3-lcd21.bin` (merged USB image at 0x0
 and `CapsuleRadar-ota-lcd21.bin` (app-only image for the device's web update page).
 The browser flasher currently supports the AMOLED boards.
 
+### GUITION JC3636W518
+
+A smaller round board: the same ESP32-S3 (8 MB PSRAM / 16 MB flash) with a 360×360
+**ST77916** IPS panel on QSPI, **CST816** touch and a PCM5100 DAC, and no PMIC, RTC or IMU.
+The UI scales down to the smaller screen. No battery readout, no face-down sleep, and no
+alert pings yet (the DAC has no driver). Pins live in `src/boards/board_jc3636w518.h`;
+details in [`docs/HARDWARE.md`](docs/HARDWARE.md).
+
+Build with `pio run -e esp32-s3-jc3636w518`; upload over USB with `-t upload`, or use
+`pio run -e esp32-s3-jc3636w518-ota -t upload` once connected to WiFi.
+
 The LCD environment rebuilds ESP-IDF with IRAM-safe LCD/GDMA interrupts and octal
 PSRAM enabled for RGB refresh during WiFi flash operations. Its initial build takes
 longer than the AMOLED environments. The QSPI sweep compositor remains enabled on
@@ -105,6 +116,7 @@ The 1.75″ board is in a **global stock squeeze** right now (even Waveshare lis
 ```bash
 pio run -e esp32-s3-amoled-175 -t upload     # build + flash over USB-C (1.75)
 pio run -e esp32-s3-amoled-143 -t upload     # ...or the 1.43
+pio run -e esp32-s3-jc3636w518 -t upload     # ...or the GUITION JC3636W518
 pio device monitor -b 115200                  # serial log
 ```
 The boot log names the board it was built for (`Capsule Radar boot  fw … board …`) — worth checking first if the screen stays black, since the wrong board's image drives the wrong pins.
@@ -130,7 +142,8 @@ python3 -m http.server -d web/flash 8000           # serve (Web Serial works on 
 
 The whole UI is portable LVGL and runs on your computer (SDL2) — great for iterating without hardware:
 ```bash
-pio run -e native -t exec     # opens a 466×466 window (needs SDL2: `brew install sdl2`)
+pio run -e native -t exec               # opens a 466×466 window (needs SDL2: `brew install sdl2`)
+pio run -e native-jc3636w518 -t exec    # the same UI at the JC3636W518's 360×360
 ```
 Mouse = touch · `T` = switch theme · close the window to quit.
 
