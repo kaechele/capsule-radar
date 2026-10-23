@@ -513,8 +513,10 @@ static void ac_draw_cb(lv_event_t *e) {
             }
         }
 
+        const bool isSelected = !s_selHex.empty() && s_selHex == ac.hex;
+
         // selection ring(s)
-        if (!s_selHex.empty() && s_selHex == ac.hex) {
+        if (isSelected) {
             lv_draw_arc_dsc_t sr;
             lv_draw_arc_dsc_init(&sr);
             sr.width = 2;
@@ -529,12 +531,16 @@ static void ac_draw_cb(lv_event_t *e) {
             }
         }
 
-        // floating labels (phosphor only; orb keeps clean balls + the tap card)
+        // floating labels (phosphor only; orb keeps clean balls + the tap card). While the
+        // card is open, every label but the selected plane's is dimmed, not hidden: they
+        // stop competing with the card but still show what else is around.
         if (!drg) {
+            const lv_opa_t opa = (!s_selHex.empty() && !isSelected) ? 90 : LV_OPA_COVER;
             lv_draw_label_dsc_t lc;
             lv_draw_label_dsc_init(&lc);
             lc.font = s_bigText ? UI_FONT_MD_BIG : UI_FONT_MD;
             lc.color = s_cInk;
+            lc.opa = opa;
             lv_area_t a1 = { (lv_coord_t)(ac.pos.x + 12), (lv_coord_t)(ac.pos.y - 14),
                              (lv_coord_t)(ac.pos.x + 168), (lv_coord_t)(ac.pos.y + 4) };
             if (ac.call[0]) lv_draw_label(d, &lc, &a1, ac.call, NULL);
@@ -542,6 +548,7 @@ static void ac_draw_cb(lv_event_t *e) {
             lv_draw_label_dsc_init(&la);
             la.font = s_bigText ? UI_FONT_SM_BIG : UI_FONT_SM;
             la.color = ac.color;
+            la.opa = opa;
             lv_area_t a2 = { a1.x1, (lv_coord_t)(ac.pos.y + 4), a1.x2, (lv_coord_t)(ac.pos.y + 26) };
             if (ac.altTxt[0]) lv_draw_label(d, &la, &a2, ac.altTxt, NULL);
         }
