@@ -1,4 +1,5 @@
-// M0 bring-up: CO5300 466x466 AMOLED via Arduino_GFX (QSPI) + LVGL.
+// QSPI panel via Arduino_GFX + LVGL: the CO5300 466x466 AMOLED (1.75, 1.43) or, when the
+// board header sets PANEL_ST77916, the ST77916 360x360 TFT (JC3636W518).
 // Pins, panel gaps and the touch driver all come from the board header selected in
 // config.h (see src/boards/). On boards with an AXP2101 the panel runs off the
 // always-on DC1 rail, so it lights up without configuring the PMIC first.
@@ -6,7 +7,7 @@
 // controller's reset is tied to the panel reset and it is absent from I2C until then.
 // The actual UI is built by ui_boot_create() (shared with the native SDL sim).
 #include "config.h"
-#if !defined(BOARD_LCD21)      // CO5300 AMOLED driver (1.75 + 1.43); the LCD-2.1 build uses display_st7701.cpp
+#if !defined(BOARD_LCD21)      // QSPI panels (1.75, 1.43, JC3636W518); the LCD-2.1 build uses display_st7701.cpp
 #include "display.h"
 #include "radar_view.h"
 #include "ui.h"
@@ -22,10 +23,27 @@
 #include <string.h>
 
 // --- Arduino_GFX panel -------------------------------------------------------
-// Typed as Arduino_CO5300* (not Arduino_GFX*) so setBrightness() — declared on
-// Arduino_OLED, not the GFX base — is reachable.
+// Typed as the concrete panel class (not Arduino_GFX*) so the CO5300's setBrightness() —
+// declared on Arduino_OLED, not the GFX base — is reachable. The ST77916 has no
+// brightness command: its board dims a PWM backlight on PIN_LCD_BL instead.
+#if PANEL_ST77916
+#include "st77916_init.h"
+typedef Arduino_ST77916 Panel;
+#define PANEL_NAME "ST77916"
+#else
+typedef Arduino_CO5300 Panel;
+#define PANEL_NAME "CO5300"
+#endif
 static Arduino_DataBus *s_bus = nullptr;
-static Arduino_CO5300  *s_gfx = nullptr;
+static Panel           *s_gfx = nullptr;
+
+static void panel_brightness(uint8_t v) {
+#if defined(PIN_LCD_BL)
+    ledcWrite(PIN_LCD_BL, (uint32_t)v * ((1u << LCD_BL_PWM_BITS) - 1u) / 255u);
+#else
+    if (s_gfx) s_gfx->setBrightness(v);
+#endif
+}
 
 // --- LVGL plumbing -----------------------------------------------------------
 #define LVGL_BUF_LINES 40    // partial draw-buffer height (lines); kept in fast internal RAM
@@ -572,6 +590,7 @@ static void flush_cb(lv_disp_drv_t *drv, const lv_area_t *area, lv_color_t *px) 
 
 // CO5300 (QSPI) requires 2-pixel-aligned flush windows: even start, odd end.
 // Without this, partial-area updates (e.g. the radar sweep) tear / ghost / flicker.
+// The ST77916 build keeps the same alignment; it is what that panel was brought up with.
 static void rounder_cb(lv_disp_drv_t *drv, lv_area_t *area) {
     (void)drv;
     area->x1 &= ~1;
@@ -658,18 +677,28 @@ static void touch_read_cb(lv_indev_drv_t *drv, lv_indev_data_t *data) {
 namespace display {
 
 bool begin() {
-    Serial.println("[display] init CO5300 QSPI...");
+    Serial.println("[display] init " PANEL_NAME " QSPI...");
     s_bus = new Arduino_ESP32QSPI(PIN_LCD_CS, PIN_LCD_SCLK,
                                   PIN_LCD_D0, PIN_LCD_D1, PIN_LCD_D2, PIN_LCD_D3);
+#if PANEL_ST77916
+    s_gfx = new Arduino_ST77916(s_bus, PIN_LCD_RST, 0 /*rotation*/, true /*ips*/,
+                                SCREEN_W, SCREEN_H,
+                                LCD_COL_OFFSET, LCD_ROW_OFFSET, 0, 0,
+                                st77916_jc3636w518_init_ops, sizeof(st77916_jc3636w518_init_ops));
+#else
     s_gfx = new Arduino_CO5300(s_bus, PIN_LCD_RST, 0 /*rotation*/,
                                SCREEN_W, SCREEN_H,
                                LCD_COL_OFFSET, LCD_ROW_OFFSET, 0, 0);
+#endif
     if (!s_gfx->begin(LCD_QSPI_HZ)) {
         Serial.println("[display] gfx->begin() FAILED");
         return false;
     }
     s_gfx->fillScreen(RGB565_BLACK);
-    s_gfx->setBrightness(BRIGHTNESS_DEFAULT);
+#if defined(PIN_LCD_BL)
+    ledcAttach(PIN_LCD_BL, LCD_BL_PWM_FREQ, LCD_BL_PWM_BITS);
+#endif
+    panel_brightness(BRIGHTNESS_DEFAULT);
     Serial.println("[display] panel up; init LVGL...");
 
     lv_init();
@@ -714,7 +743,7 @@ bool begin() {
     s_disp_drv.hor_res  = SCREEN_W;
     s_disp_drv.ver_res  = SCREEN_H;
     s_disp_drv.flush_cb = flush_cb;
-    s_disp_drv.rounder_cb = rounder_cb;     // CO5300 needs 2-px-aligned windows
+    s_disp_drv.rounder_cb = rounder_cb;     // 2-px-aligned windows (CO5300; kept for the ST77916 too)
     s_disp_drv.draw_buf = &s_draw_buf;
     lv_disp_drv_register(&s_disp_drv);
 
@@ -751,7 +780,7 @@ void sweepTick() { compose_step(); }
 bool sweepAvailable() { return sweep_ready(); }
 
 void setBrightness(uint8_t v) {
-    if (s_gfx) s_gfx->setBrightness(v);
+    panel_brightness(v);
     s_touchQ.setWakeOnly(v == 0);   // a dark panel takes a touch only as a wake-up
 }
 
