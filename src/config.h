@@ -56,7 +56,7 @@ static const float WEB_RANGE_KM[]   = {10.0f, 15.0f, 25.0f, 30.0f, 50.0f, 100.0f
 #define PULSE_OPA           220            // ring opacity at the start (fades to 0)
 #define LV_COLOR_DEPTH_BITS 16
 // LCD_COL_OFFSET / LCD_ROW_OFFSET / LCD_QSPI_HZ are panel-specific -> board header.
-#define BRIGHTNESS_DEFAULT  200            // 0..255, panel brightness via cmd 0x51
+#define BRIGHTNESS_DEFAULT  200            // 0..255, panel brightness via cmd 0x51 (or PWM backlight duty)
 // Face-down sleep (QMI8658, logic in facedown_sleep.h): the IMU is read every
 // FACEDOWN_CHECK_MS, and FACEDOWN_COUNT face-down readings in a row with no touch in between
 // turn the screen off (~1.6 s). Accelerometer Z at ±2 g full scale: 16384 LSB/g.
@@ -135,6 +135,7 @@ static const float WEB_RANGE_KM[]   = {10.0f, 15.0f, 25.0f, 30.0f, 50.0f, 100.0f
 // default so an unflagged build behaves exactly as before.
 //   -DBOARD_LCD21       -> Waveshare ESP32-S3-Touch-LCD-2.1
 //   -DBOARD_AMOLED_143  -> Waveshare ESP32-S3-Touch-AMOLED-1.43
+//   -DBOARD_JC3636W518  -> GUITION JC3636W518 (360x360 ST77916 + CST816)
 //   (none)              -> Waveshare ESP32-S3-Touch-AMOLED-1.75  (reference board)
 // Never guess pins for a new board: take them from the vendor demo or the Arduino
 // core board variant, then confirm them on hardware before committing.
@@ -142,6 +143,8 @@ static const float WEB_RANGE_KM[]   = {10.0f, 15.0f, 25.0f, 30.0f, 50.0f, 100.0f
 #  include "boards/board_lcd_21.h"
 #elif defined(BOARD_AMOLED_143)
 #  include "boards/board_amoled_143.h"
+#elif defined(BOARD_JC3636W518)
+#  include "boards/board_jc3636w518.h"
 #else
 #  include "boards/board_amoled_175.h"
 #endif

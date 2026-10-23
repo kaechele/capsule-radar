@@ -5,8 +5,8 @@
 //   pio run -e native            # build
 //   pio run -e native -t exec    # build + run (or run .pio/build/native/program)
 //
-// Note: the real panel is a 466x466 *round* AMOLED; this square window shows the
-// full buffer, so the corners (hidden on the device) are visible here.
+// Note: the real panel is round (466x466, or the board's SCREEN_W/H); this square window
+// shows the full buffer, so the corners (hidden on the device) are visible here.
 #include <SDL.h>
 #include <lvgl.h>
 #include <stdio.h>
@@ -28,8 +28,8 @@
 #define M_PI 3.14159265358979323846
 #endif
 
-#define SIM_W SCREEN_W   // 466
-#define SIM_H SCREEN_H   // 466
+#define SIM_W SCREEN_W   // 466 unless a -DBOARD_* flag picks another board
+#define SIM_H SCREEN_H
 
 static SDL_Window   *s_win = NULL;
 static SDL_Renderer *s_ren = NULL;
@@ -277,7 +277,11 @@ int main(int argc, char **argv) {
             char clk[8];
             snprintf(clk, sizeof(clk), "14:%02d", (int)((now / 1000) % 60));  // mock clock
             ui_set_status(true, true, -58, clk);   // mock: connected, fresh, strong signal
+#if BOARD_HAS_PMIC
             ui_set_battery(78, false, true);   // mock battery
+#else
+            ui_set_battery(-1, false, false);  // no battery gauge on this board: HUD hides it
+#endif
             ui_set_date("08 Jun 2026");        // mock date
             ui_set_netinfo("Configure at\ncapsuleradar.local\n192.168.1.42");  // mock net info
             ui_set_feed_source("api.airplanes.live");                          // mock feed source
