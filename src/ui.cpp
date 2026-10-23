@@ -27,7 +27,7 @@
 
 static lv_obj_t *s_tv = nullptr;
 static lv_obj_t *s_tileRadar = nullptr, *s_tileList = nullptr, *s_tileStats = nullptr, *s_tileWeather = nullptr;
-static lv_obj_t *s_card = nullptr, *s_cardTitle = nullptr, *s_cardL = nullptr, *s_cardR = nullptr;
+static lv_obj_t *s_card = nullptr, *s_cardTitle = nullptr, *s_cardPrimary = nullptr, *s_cardSecondary = nullptr;
 static lv_obj_t *s_cardRoute = nullptr;
 static lv_obj_t *s_photo = nullptr, *s_photoCredit = nullptr;   // aircraft photo above the card
 static char s_lastRouteReq[12] = "";
@@ -175,11 +175,12 @@ static void refresh_card(void) {
     if (in.track != in.track)   snprintf(hdgS, sizeof(hdgS), "-");
     else                        snprintf(hdgS, sizeof(hdgS), "%03.0f", in.track);
 
-    char left[96], right[96];
-    snprintf(left,  sizeof(left),  "ALT  %s\nSPD  %s\nDIST %.1f %s", altS, spdS, dist_val(in.distKm), dist_unit());
-    snprintf(right, sizeof(right), "V/S  %s\nHDG  %s\nSQK  %s", vsS, hdgS, sqS);
-    lv_label_set_text(s_cardL, left);
-    lv_label_set_text(s_cardR, right);
+    char primary[64], secondary[96];
+    snprintf(primary,   sizeof(primary),   "ALT  %s\nSPD  %s", altS, spdS);
+    snprintf(secondary, sizeof(secondary), "DIST %.1f %s   HDG %s\nV/S  %-8s SQK %s",
+             dist_val(in.distKm), dist_unit(), hdgS, vsS, sqS);
+    lv_label_set_text(s_cardPrimary, primary);
+    lv_label_set_text(s_cardSecondary, secondary);
 
     // route (origin -> destination), looked up asynchronously by callsign
     if (in.call[0] && strcmp(in.call, s_lastRouteReq) != 0) {
@@ -207,7 +208,7 @@ static void refresh_card(void) {
         lv_color_t *pbuf = photo_buffer(&mw, &mh);
         lv_canvas_set_buffer(s_photo, pbuf, pw, ph, LV_IMG_CF_TRUE_COLOR);
         lv_obj_set_size(s_photo, pw, ph);
-        lv_obj_align(s_photo, LV_ALIGN_CENTER, 0, -UI_SCALE(28) - ph / 2);   // sit lower: fill the band down to the card
+        lv_obj_align(s_photo, LV_ALIGN_CENTER, 0, -UI_SCALE(36) - ph / 2);   // sit lower: fill the band down to the card
         lv_obj_clear_flag(s_photo, LV_OBJ_FLAG_HIDDEN);
         lv_obj_invalidate(s_photo);
         if (s_photoCredit) {
@@ -225,7 +226,7 @@ static void refresh_card(void) {
         if (s_photoCredit) {
             const bool done = in.hex[0] && photo_done(in.hex);
             lv_label_set_text(s_photoCredit, done ? "No photo available" : "Loading photo...");
-            lv_obj_align(s_photoCredit, LV_ALIGN_CENTER, 0, -UI_SCALE(104));   // where the photo would sit
+            lv_obj_align(s_photoCredit, LV_ALIGN_CENTER, 0, -UI_SCALE(112));   // where the photo would sit
             lv_obj_clear_flag(s_photoCredit, LV_OBJ_FLAG_HIDDEN);
         }
     }
@@ -843,9 +844,9 @@ static lv_obj_t *make_round_panel(lv_obj_t *parent) {
 static void build_card(void) {
     s_card = lv_obj_create(s_tileRadar);
     lv_obj_remove_style_all(s_card);
-    // large text needs a taller card (three 18px data lines + the route line below them)
-    lv_obj_set_size(s_card, UI_SCALE(s_bigText ? 316 : 300), UI_SCALE(s_bigText ? 148 : 118));
-    lv_obj_align(s_card, LV_ALIGN_CENTER, 0, UI_SCALE(s_bigText ? 56 : 66));
+    // large text needs a taller card (bigger title / primary / secondary / route stack)
+    lv_obj_set_size(s_card, UI_SCALE(s_bigText ? 316 : 300), UI_SCALE(s_bigText ? 190 : 150));
+    lv_obj_align(s_card, LV_ALIGN_CENTER, 0, UI_SCALE(s_bigText ? 58 : 74));
     lv_obj_set_style_bg_color(s_card, UI_PANEL, 0);
     lv_obj_set_style_bg_opa(s_card, 235, 0);
     lv_obj_set_style_radius(s_card, UI_SCALE(14), 0);
@@ -862,23 +863,26 @@ static void build_card(void) {
     lv_obj_set_style_text_color(s_cardTitle, UI_INK, 0);
     lv_obj_align(s_cardTitle, LV_ALIGN_TOP_LEFT, 0, 0);
 
-    s_cardL = lv_label_create(s_card);
-    lv_obj_set_style_text_font(s_cardL, F14(), 0);
-    lv_obj_set_style_text_color(s_cardL, UI_SOFT, 0);
-    lv_obj_align(s_cardL, LV_ALIGN_TOP_LEFT, 0, UI_SCALE(s_bigText ? 30 : 26));
+    // Primary tier: altitude and speed, what you glance at first — large, bright.
+    s_cardPrimary = lv_label_create(s_card);
+    lv_obj_set_style_text_font(s_cardPrimary, F16(), 0);
+    lv_obj_set_style_text_color(s_cardPrimary, UI_INK, 0);
+    lv_obj_align(s_cardPrimary, LV_ALIGN_TOP_LEFT, 0, UI_SCALE(s_bigText ? 32 : 26));
 
-    s_cardR = lv_label_create(s_card);
-    lv_obj_set_style_text_font(s_cardR, F14(), 0);
-    lv_obj_set_style_text_color(s_cardR, UI_SOFT, 0);
-    lv_obj_align(s_cardR, LV_ALIGN_TOP_LEFT, UI_SCALE(s_bigText ? 160 : 150), UI_SCALE(s_bigText ? 30 : 26));
+    // Secondary tier: distance, heading, vertical speed, squawk — all still there, in a
+    // smaller, dimmer block, since they are looked up less often.
+    s_cardSecondary = lv_label_create(s_card);
+    lv_obj_set_style_text_font(s_cardSecondary, F12(), 0);
+    lv_obj_set_style_text_color(s_cardSecondary, UI_SOFT, 0);
+    lv_obj_align(s_cardSecondary, LV_ALIGN_TOP_LEFT, 0, UI_SCALE(s_bigText ? 92 : 74));
 
     s_cardRoute = lv_label_create(s_card);
-    lv_obj_set_style_text_font(s_cardRoute, F14(), 0);
+    lv_obj_set_style_text_font(s_cardRoute, F12(), 0);
     lv_obj_set_style_text_color(s_cardRoute, UI_GREEN, 0);
     // fill the card width and dot out long "Origin -> Destination" instead of clipping
     lv_obj_set_width(s_cardRoute, UI_SCALE(s_bigText ? 292 : 276));   // card 316/300 minus pad 12 x2
     lv_label_set_long_mode(s_cardRoute, LV_LABEL_LONG_DOT);
-    lv_obj_align(s_cardRoute, LV_ALIGN_TOP_LEFT, 0, UI_SCALE(s_bigText ? 100 : 76));
+    lv_obj_align(s_cardRoute, LV_ALIGN_TOP_LEFT, 0, UI_SCALE(s_bigText ? 142 : 112));
 
     // aircraft photo + credit, floating above the card (hidden until one loads)
     s_photo = lv_canvas_create(s_tileRadar);
