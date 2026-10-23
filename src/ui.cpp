@@ -10,6 +10,7 @@
 #include "airports.h"
 #include "config.h"
 #include "ui_scale.h"
+#include "ui_font.h"
 #include <lvgl.h>
 #include <stdio.h>
 #include <stdint.h>
@@ -68,9 +69,11 @@ void ui_set_units(int u) {
 // toggle saves to NVS and reboots, so it always takes effect through this path).
 static bool s_bigText = false;
 void ui_set_large_text(bool on) { s_bigText = on; }
-static const lv_font_t *F12() { return s_bigText ? &lv_font_montserrat_16 : &lv_font_montserrat_12; }
-static const lv_font_t *F14() { return s_bigText ? &lv_font_montserrat_18 : &lv_font_montserrat_14; }
-static const lv_font_t *F16() { return s_bigText ? &lv_font_montserrat_20 : &lv_font_montserrat_16; }
+// The names are the sizes on the 466 px panels; they resolve through ui_font.h's roles,
+// so a smaller panel gets correspondingly smaller fonts.
+static const lv_font_t *F12() { return s_bigText ? UI_FONT_SM_BIG : UI_FONT_SM; }
+static const lv_font_t *F14() { return s_bigText ? UI_FONT_MD_BIG : UI_FONT_MD; }
+static const lv_font_t *F16() { return s_bigText ? UI_FONT_LG_BIG : UI_FONT_LG; }
 
 static void fmt_alt(char *b, size_t n, float ft, bool gnd) {
     if (gnd)            snprintf(b, n, "GND");
@@ -950,7 +953,7 @@ void ui_splash_show(void) {
 
     lv_obj_t *title = lv_label_create(cont);
     lv_label_set_text(title, "CAPSULE RADAR");
-    lv_obj_set_style_text_font(title, &lv_font_montserrat_28, 0);
+    lv_obj_set_style_text_font(title, UI_FONT_TITLE, 0);
     lv_obj_set_style_text_color(title, UI_GREEN, 0);
     lv_obj_align(title, LV_ALIGN_CENTER, 0, UI_SCALE(118));
 
@@ -1173,7 +1176,7 @@ void ui_create(void) {
     lv_obj_set_style_radius(s_weatherTitle, 8, 0);
     s_weatherNow = lv_label_create(wp);
     lv_obj_set_width(s_weatherNow, UI_SCALE(330));
-    lv_obj_set_style_text_font(s_weatherNow, &lv_font_montserrat_28, 0);
+    lv_obj_set_style_text_font(s_weatherNow, UI_FONT_TITLE, 0);
     lv_obj_set_style_text_color(s_weatherNow, UI_INK, 0);
     lv_obj_set_style_text_align(s_weatherNow, LV_TEXT_ALIGN_CENTER, 0);
     lv_label_set_text(s_weatherNow, "Forecast unavailable");
@@ -1249,7 +1252,7 @@ void ui_create(void) {
     lv_label_set_text(s_wxNorth, "N");
     lv_obj_align(s_wxNorth, LV_ALIGN_TOP_MID, 0, UI_SCALE(58));
     s_wxCenter = lv_label_create(wp);
-    lv_obj_set_style_text_font(s_wxCenter, &lv_font_montserrat_28, 0);
+    lv_obj_set_style_text_font(s_wxCenter, UI_FONT_TITLE, 0);
     lv_obj_set_style_text_color(s_wxCenter, UI_INK, 0);
     lv_label_set_text(s_wxCenter, "+");
     lv_obj_align(s_wxCenter, LV_ALIGN_TOP_MID, 0, UI_SCALE(219));
@@ -1293,7 +1296,7 @@ void ui_create(void) {
 
     // Forecast mode: independent, aligned objects instead of a tiny text table.
     s_fcCurrent = lv_label_create(wp);
-    lv_obj_set_style_text_font(s_fcCurrent, &lv_font_montserrat_28, 0);
+    lv_obj_set_style_text_font(s_fcCurrent, UI_FONT_TITLE, 0);
     lv_obj_set_style_text_color(s_fcCurrent, UI_INK, 0);
     lv_label_set_text(s_fcCurrent, "-- C");
     lv_obj_align(s_fcCurrent, LV_ALIGN_TOP_MID, 0, UI_SCALE(68));

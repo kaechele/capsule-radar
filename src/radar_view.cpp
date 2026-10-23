@@ -6,6 +6,7 @@
 #include "radar_view.h"
 #include "config.h"
 #include "ui_scale.h"
+#include "ui_font.h"
 #include "geo.h"
 #include "coastline.h"
 #include "airports.h"
@@ -532,14 +533,14 @@ static void ac_draw_cb(lv_event_t *e) {
         if (!drg) {
             lv_draw_label_dsc_t lc;
             lv_draw_label_dsc_init(&lc);
-            lc.font = s_bigText ? &lv_font_montserrat_18 : &lv_font_montserrat_14;
+            lc.font = s_bigText ? UI_FONT_MD_BIG : UI_FONT_MD;
             lc.color = s_cInk;
             lv_area_t a1 = { (lv_coord_t)(ac.pos.x + 12), (lv_coord_t)(ac.pos.y - 14),
                              (lv_coord_t)(ac.pos.x + 168), (lv_coord_t)(ac.pos.y + 4) };
             if (ac.call[0]) lv_draw_label(d, &lc, &a1, ac.call, NULL);
             lv_draw_label_dsc_t la;
             lv_draw_label_dsc_init(&la);
-            la.font = s_bigText ? &lv_font_montserrat_16 : &lv_font_montserrat_12;
+            la.font = s_bigText ? UI_FONT_SM_BIG : UI_FONT_SM;
             la.color = ac.color;
             lv_area_t a2 = { a1.x1, (lv_coord_t)(ac.pos.y + 4), a1.x2, (lv_coord_t)(ac.pos.y + 26) };
             if (ac.altTxt[0]) lv_draw_label(d, &la, &a2, ac.altTxt, NULL);
@@ -728,14 +729,14 @@ void init(void *lv_parent) {
     s_sweep     = make_layer(parent, sweep_draw_cb);
     s_acLayer   = make_layer(parent, ac_draw_cb);
 
-    s_rose[0] = make_label(parent, "N", &lv_font_montserrat_28, COL_INK,  LV_ALIGN_TOP_MID,    0, UI_SCALE(12));
-    s_rose[1] = make_label(parent, "S", &lv_font_montserrat_16, COL_SOFT, LV_ALIGN_BOTTOM_MID, 0, -UI_SCALE(12));
-    s_rose[2] = make_label(parent, "E", &lv_font_montserrat_16, COL_SOFT, LV_ALIGN_RIGHT_MID, -UI_SCALE(12), 0);
-    s_rose[3] = make_label(parent, "W", &lv_font_montserrat_16, COL_SOFT, LV_ALIGN_LEFT_MID,   UI_SCALE(12), 0);
+    s_rose[0] = make_label(parent, "N", UI_FONT_TITLE, COL_INK,  LV_ALIGN_TOP_MID,    0, UI_SCALE(12));
+    s_rose[1] = make_label(parent, "S", UI_FONT_LG, COL_SOFT, LV_ALIGN_BOTTOM_MID, 0, -UI_SCALE(12));
+    s_rose[2] = make_label(parent, "E", UI_FONT_LG, COL_SOFT, LV_ALIGN_RIGHT_MID, -UI_SCALE(12), 0);
+    s_rose[3] = make_label(parent, "W", UI_FONT_LG, COL_SOFT, LV_ALIGN_LEFT_MID,   UI_SCALE(12), 0);
 
     char rng[16];
     snprintf(rng, sizeof(rng), "%.0f km", (double)RANGE_KM_DEFAULT);
-    s_rangeLbl = make_label(parent, rng, &lv_font_montserrat_14, COL_GREEN, LV_ALIGN_CENTER, UI_SCALE(92), -UI_SCALE(8));
+    s_rangeLbl = make_label(parent, rng, UI_FONT_MD, COL_GREEN, LV_ALIGN_CENTER, UI_SCALE(92), -UI_SCALE(8));
     lv_obj_set_style_text_opa(s_rangeLbl, 128, 0);
 
     s_pulse = lv_obj_create(parent);

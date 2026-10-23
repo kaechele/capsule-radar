@@ -77,11 +77,12 @@
 /*==================
    FONTS
  *==================*/
+#define LV_FONT_MONTSERRAT_10 1   /* panels under 466 px: smallest role (src/ui_font.h) */
 #define LV_FONT_MONTSERRAT_12 1
 #define LV_FONT_MONTSERRAT_14 1
 #define LV_FONT_MONTSERRAT_16 1
 #define LV_FONT_MONTSERRAT_18 1   /* large-text mode: 14 -> 18 */
-#define LV_FONT_MONTSERRAT_20 1   /* large-text mode: 16 -> 20 */
+#define LV_FONT_MONTSERRAT_20 1   /* large-text mode: 16 -> 20; title role under 466 px */
 #define LV_FONT_MONTSERRAT_28 1
 #define LV_FONT_DEFAULT &lv_font_montserrat_14
 
