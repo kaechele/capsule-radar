@@ -31,7 +31,7 @@ static lv_obj_t *s_card = nullptr, *s_cardTitle = nullptr, *s_cardL = nullptr, *
 static lv_obj_t *s_cardRoute = nullptr;
 static lv_obj_t *s_photo = nullptr, *s_photoCredit = nullptr;   // aircraft photo above the card
 static char s_lastRouteReq[12] = "";
-static lv_obj_t *s_hudWifi = nullptr, *s_hudCount = nullptr, *s_hudClock = nullptr, *s_hudBatt = nullptr, *s_hudDate = nullptr;
+static lv_obj_t *s_hudWifi = nullptr, *s_hudCount = nullptr, *s_hudClock = nullptr, *s_hudBatt = nullptr;
 static lv_obj_t *s_hudBars[4] = { nullptr, nullptr, nullptr, nullptr };   // WiFi signal-strength bars
 static lv_obj_t *s_list = nullptr;
 static lv_obj_t *s_statsLbl = nullptr;
@@ -434,9 +434,6 @@ void ui_set_battery(int pct, bool charging, bool present) {
     lv_obj_set_style_text_color(s_hudBatt, (pct <= 15 && !charging) ? UI_EMERG : UI_INK, 0);
 }
 
-void ui_set_date(const char *date) {
-    if (s_hudDate && date) lv_label_set_text(s_hudDate, date);
-}
 
 void ui_set_netinfo(const char *line) {
     if (s_statsNet && line) lv_label_set_text(s_statsNet, line);
@@ -1023,16 +1020,18 @@ void ui_create(void) {
 
     // top status HUD (wifi / aircraft count / clock); white reads on both themes.
     // WiFi is a 4-bar signal meter: bar count = RSSI strength, colour = feed health.
+    // No date line under it: it was the smallest, least glanceable text on the busiest view
+    // for the least urgent information. The row runs a font tier bigger in its place.
     s_hudWifi = lv_obj_create(s_tileRadar);
     lv_obj_remove_style_all(s_hudWifi);
-    lv_obj_set_size(s_hudWifi, UI_SCALE(21), UI_SCALE(14));
-    lv_obj_align(s_hudWifi, LV_ALIGN_TOP_MID, -UI_SCALE(94), UI_SCALE(50));
+    lv_obj_set_size(s_hudWifi, UI_SCALE(26), UI_SCALE(18));
+    lv_obj_align(s_hudWifi, LV_ALIGN_TOP_MID, -UI_SCALE(100), UI_SCALE(50));
     lv_obj_clear_flag(s_hudWifi, LV_OBJ_FLAG_SCROLLABLE | LV_OBJ_FLAG_CLICKABLE);
     for (int i = 0; i < 4; ++i) {
         s_hudBars[i] = lv_obj_create(s_hudWifi);
         lv_obj_remove_style_all(s_hudBars[i]);
-        lv_obj_set_size(s_hudBars[i], UI_SCALE(3), UI_SCALE(4 + i * 3));   // 4, 7, 10, 13 px tall (scaled)
-        lv_obj_align(s_hudBars[i], LV_ALIGN_BOTTOM_LEFT, UI_SCALE(i * 5), 0);
+        lv_obj_set_size(s_hudBars[i], UI_SCALE(4), UI_SCALE(6 + i * 4));   // 6, 10, 14, 18 px tall (scaled)
+        lv_obj_align(s_hudBars[i], LV_ALIGN_BOTTOM_LEFT, UI_SCALE(i * 6), 0);
         lv_obj_set_style_radius(s_hudBars[i], 1, 0);
         lv_obj_set_style_bg_color(s_hudBars[i], UI_INK, 0);
         lv_obj_set_style_bg_opa(s_hudBars[i], LV_OPA_COVER, 0);
@@ -1040,35 +1039,28 @@ void ui_create(void) {
     }
 
     s_hudGps = lv_label_create(s_tileRadar);     // GPS satellite icon (between WiFi bars and count)
-    lv_obj_set_style_text_font(s_hudGps, F14(), 0);
+    lv_obj_set_style_text_font(s_hudGps, F16(), 0);
     lv_obj_set_style_text_color(s_hudGps, UI_GREEN, 0);
     lv_label_set_text(s_hudGps, "");             // hidden until ui_set_gps() says GPS is on
-    lv_obj_align(s_hudGps, LV_ALIGN_TOP_MID, -UI_SCALE(62), UI_SCALE(50));
+    lv_obj_align(s_hudGps, LV_ALIGN_TOP_MID, -UI_SCALE(64), UI_SCALE(48));
 
     s_hudCount = lv_label_create(s_tileRadar);
-    lv_obj_set_style_text_font(s_hudCount, F14(), 0);
+    lv_obj_set_style_text_font(s_hudCount, F16(), 0);
     lv_obj_set_style_text_color(s_hudCount, UI_INK, 0);
     lv_label_set_text(s_hudCount, "0");
-    lv_obj_align(s_hudCount, LV_ALIGN_TOP_MID, -UI_SCALE(34), UI_SCALE(50));
+    lv_obj_align(s_hudCount, LV_ALIGN_TOP_MID, -UI_SCALE(32), UI_SCALE(48));
 
     s_hudClock = lv_label_create(s_tileRadar);
-    lv_obj_set_style_text_font(s_hudClock, F14(), 0);
+    lv_obj_set_style_text_font(s_hudClock, F16(), 0);
     lv_obj_set_style_text_color(s_hudClock, UI_INK, 0);
     lv_label_set_text(s_hudClock, "--:--");
-    lv_obj_align(s_hudClock, LV_ALIGN_TOP_MID, UI_SCALE(30), UI_SCALE(50));
+    lv_obj_align(s_hudClock, LV_ALIGN_TOP_MID, UI_SCALE(34), UI_SCALE(48));
 
     s_hudBatt = lv_label_create(s_tileRadar);
-    lv_obj_set_style_text_font(s_hudBatt, F14(), 0);
+    lv_obj_set_style_text_font(s_hudBatt, F16(), 0);
     lv_obj_set_style_text_color(s_hudBatt, UI_INK, 0);
     lv_label_set_text(s_hudBatt, "");
-    lv_obj_align(s_hudBatt, LV_ALIGN_TOP_MID, UI_SCALE(92), UI_SCALE(50));
-
-    s_hudDate = lv_label_create(s_tileRadar);
-    lv_obj_set_style_text_font(s_hudDate, F12(), 0);
-    lv_obj_set_style_text_color(s_hudDate, UI_INK, 0);
-    lv_obj_set_style_text_opa(s_hudDate, 140, 0);
-    lv_label_set_text(s_hudDate, "");
-    lv_obj_align(s_hudDate, LV_ALIGN_TOP_MID, 0, UI_SCALE(70));
+    lv_obj_align(s_hudBatt, LV_ALIGN_TOP_MID, UI_SCALE(98), UI_SCALE(48));
 
     // --- list tile (circular panel, clipped to the round screen) ---
     lv_obj_t *lp = make_round_panel(s_tileList);

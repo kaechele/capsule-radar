@@ -282,7 +282,6 @@ int main(int argc, char **argv) {
 #else
             ui_set_battery(-1, false, false);  // no battery gauge on this board: HUD hides it
 #endif
-            ui_set_date("08 Jun 2026");        // mock date
             ui_set_netinfo("Configure at\ncapsuleradar.local\n192.168.1.42");  // mock net info
             ui_set_feed_source("api.airplanes.live");                          // mock feed source
         }

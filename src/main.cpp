@@ -1398,9 +1398,6 @@ void loop() {
         const bool haveTime = getLocalTime(&ti, 0);
         if (haveTime) {
             snprintf(clk, sizeof(clk), "%02d:%02d", ti.tm_hour, ti.tm_min);
-            char date[20];
-            strftime(date, sizeof(date), "%d %b %Y", &ti);   // e.g. "08 Jun 2026"
-            ui_set_date(date);
         }
         const bool wifiUp = (WiFi.status() == WL_CONNECTED);
         const int  rssi   = wifiUp ? (int)WiFi.RSSI() : -127;
