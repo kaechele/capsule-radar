@@ -495,8 +495,8 @@ static std::vector<lv_obj_t *> s_listRows;
 // only when a row's emergency state changes.
 static std::vector<bool> s_listRowEmg;
 // Shared styles (one copy each, not per-row local styles that cost pool memory per row).
-// s_rowStyle reproduces the old lv_list button look: full width, a row every 42 px with
-// F16, a 1 px separator underneath in the default theme's grey.
+// s_rowStyle reproduces the old lv_list button look: full width, padded, a 1 px separator
+// underneath in the default theme's grey. Each row is two lines (see build_list).
 static lv_style_t s_rowStyle, s_rowEmgStyle;
 static bool s_rowStylesInit = false;
 
@@ -551,10 +551,13 @@ static void build_list(void) {
     for (int i = 0; i < n; ++i) {
         AcInfo in;
         radar::info(i, in);
-        char altS[16], txt[64];
+        // Two lines: callsign + altitude, then distance + bearing from home in a dimmer
+        // colour (label recolor). One line with all three ran out of width with large text
+        // and on the 360 px panel, wrapping the distance unit onto a line of its own.
+        char altS[16], txt[96];
         fmt_alt(altS, sizeof(altS), in.altFt, in.onGround);
-        snprintf(txt, sizeof(txt), "%-8.8s  %-8s %4.1f %s",
-                 in.call[0] ? in.call : in.hex, altS, dist_val(in.distKm), dist_unit());
+        snprintf(txt, sizeof(txt), "%-8.8s  %s\n#5F7A6C %.1f %s   %03.0f\xC2\xB0#",
+                 in.call[0] ? in.call : in.hex, altS, dist_val(in.distKm), dist_unit(), in.bearingDeg);
         if (i < (int)s_listRows.size()) {          // existing row: just refresh its content
             lv_obj_t *l = s_listRows[i];
             lv_label_set_text(l, txt);
@@ -567,6 +570,7 @@ static void build_list(void) {
             lv_obj_t *l = lv_label_create(s_list);
             lv_obj_add_style(l, &s_rowStyle, 0);
             lv_label_set_long_mode(l, LV_LABEL_LONG_DOT);   // fixed width: a long line ends in '...'
+            lv_label_set_recolor(l, true);                  // dims the second line
             lv_label_set_text(l, txt);
             if (in.emergency) lv_obj_add_style(l, &s_rowEmgStyle, 0);
             s_listRows.push_back(l);
