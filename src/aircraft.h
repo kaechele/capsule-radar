@@ -8,6 +8,7 @@
   #include <cstdint>
   using String = std::string;
 #endif
+#include <cmath>     // NAN (glibc does not pull it in through <string>, unlike macOS)
 #include <stdint.h>
 
 struct Aircraft {
