@@ -37,14 +37,8 @@ static const float WEB_RANGE_KM[]   = {10.0f, 15.0f, 25.0f, 30.0f, 50.0f, 100.0f
 #define WX_RADAR_REFRESH_MS 300000UL       // RainViewer frames update about every 5 minutes
 #define CLOUD_IMAGE_REFRESH_MS 600000UL    // EUMETSAT MTG cloud imagery; cache for 10 minutes
 
-// ---------- Screen geometry (AMOLED defaults; LCD 2.1 overrides below) ----------
-#if !defined(BOARD_LCD21)
-#define SCREEN_W            466
-#define SCREEN_H            466
-#define SCREEN_CX           233
-#define SCREEN_CY           233
-#define RADAR_R_OUTER_PX    218            // outer ring radius in pixels
-#endif
+// ---------- Screen geometry ----------
+// SCREEN_W/H/CX/CY and RADAR_R_OUTER_PX differ per panel, so each board header defines them.
 // radar sweep (radar_view.cpp draws it in LVGL; display.cpp's compositor draws it per pixel)
 #define SWEEP_PERIOD_MS     8000           // one revolution (LVGL sweep)
 #define SWEEP_COMP_PERIOD_MS 40000         // one revolution when the compositor draws it (a slower sweep hides the

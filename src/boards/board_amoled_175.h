@@ -9,6 +9,13 @@
 #define BOARD_NAME          "ESP32-S3-Touch-AMOLED-1.75"
 #define BOARD_PIO_ENV       "esp32-s3-amoled-175"   // used in the OTA hint printed at boot
 
+// ---------- Screen (CO5300 AMOLED, 466x466) ----------
+#define SCREEN_W            466
+#define SCREEN_H            466
+#define SCREEN_CX           233
+#define SCREEN_CY           233
+#define RADAR_R_OUTER_PX    218            // outer ring radius in pixels
+
 // ---------- Panel ----------
 #define PIN_LCD_CS          12
 #define PIN_LCD_RST         39
